@@ -1,0 +1,9 @@
+<!--version.html-->
+
+<!--Embed the header.html template at this location-->
+{{ template "basic_header.html" .}}
+
+<p>{{.payload.Version}}</p>
+
+<!--Embed the footer.html template at this location-->
+{{ template "footer.html" .}}

@@ -13,6 +13,10 @@ var router *gin.Engine
 // the template name is present
 func render(c *gin.Context, status int, templateName string, data gin.H) {
 
+	/*
+		loggedInInterface, _ := c.Get("is_api_logged_in")
+		data["is_api_logged_in"] = loggedInInterface.(bool)
+	*/
 	switch c.Request.Header.Get("Accept") {
 	case "application/json":
 		// Respond with JSON
@@ -28,6 +32,7 @@ func render(c *gin.Context, status int, templateName string, data gin.H) {
 }
 
 func main() {
+	// ConnectDatabase()
 
 	// Set the router as the default one provided by Gin
 	router = gin.Default()

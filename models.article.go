@@ -4,6 +4,7 @@ package main
 
 import (
 	"errors"
+	// 	"github.com/jinzhu/gorm"
 )
 
 type pageError struct {
@@ -12,7 +13,7 @@ type pageError struct {
 }
 
 type article struct {
-	ID      int    `json:"id"`
+	ID      int    `json:"id" gorm:"primary_key"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }

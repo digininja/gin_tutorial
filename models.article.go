@@ -6,6 +6,11 @@ import (
 	"errors"
 )
 
+type pageError struct {
+	Code    int    `json:code`
+	Message string `json:message`
+}
+
 type article struct {
 	ID      int    `json:"id"`
 	Title   string `json:"title"`

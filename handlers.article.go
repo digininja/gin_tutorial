@@ -28,13 +28,10 @@ func showRobinPage(c *gin.Context) {
 func showIndexPage(c *gin.Context) {
 	articles := getAllArticles()
 
-	// Call the HTML method of the Context to render a template
-	c.HTML(
-		// Set the HTTP status to 200 (OK)
+	render(
+		c,
 		http.StatusOK,
-		// Use the index.html template
 		"index.html",
-		// Pass the data that the page uses
 		gin.H{
 			"title":   "Home Page",
 			"payload": articles,
@@ -49,7 +46,8 @@ func getArticle(c *gin.Context) {
 		// Check if the article exists
 		if article, err := getArticleByID(articleID); err == nil {
 			// Call the HTML method of the Context to render a template
-			c.HTML(
+			render(
+				c,
 				// Set the HTTP status to 200 (OK)
 				http.StatusOK,
 				// Use the index.html template
@@ -73,14 +71,16 @@ func getArticle(c *gin.Context) {
 }
 
 func custom404(c *gin.Context) {
-
-	// Call the HTML method of the Context to render a template
-	c.HTML(
-		// Set the HTTP status to 200 (OK)
+	pe := pageError{http.StatusNotFound, "Page Not Found"}
+	render(
+		c,
+		// Set the HTTP status to 400 (not found)
 		http.StatusNotFound,
-		// Use the index.html template
+		// Use the 404.html template
 		"404.html",
-		gin.H{},
+		gin.H{
+			"title":   "Page Not Found",
+			"payload": pe,
+		},
 	)
-
 }

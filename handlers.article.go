@@ -10,8 +10,8 @@ import (
 
 func showRobinPage(c *gin.Context) {
 
-	// Call the HTML method of the Context to render a template
-	c.HTML(
+	render(
+		c,
 		// Set the HTTP status to 200 (OK)
 		http.StatusOK,
 		// Use the index.html template

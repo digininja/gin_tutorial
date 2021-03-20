@@ -8,58 +8,27 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// This middleware ensures that a request will be aborted with an error
-// if the user is not logged in
-func checkAPILogin() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// If there's an error or if the token is empty
-		// the user is not logged in
-		/*
-			loggedInInterface, _ := c.Get("is_api_logged_in")
-			loggedIn := loggedInInterface.(bool)
-		*/
-		loggedIn := true
-		if !loggedIn {
-			//if token, err := c.Cookie("token"); err != nil || token == "" {
-			c.AbortWithStatus(http.StatusUnauthorized)
-		}
-	}
-}
+func APIAuthRequired(c *gin.Context) {
+	apiKey := c.PostForm("apiKey")
+	headerKey := c.GetHeader("apiKey")
 
-// This middleware sets whether the API is logged in or not
-func setAPIStatus() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if token, err := c.Cookie("token"); err == nil || token != "" {
-			c.Set("is_api_logged_in", true)
-		} else {
-			c.Set("is_api_logged_in", false)
-		}
+	if headerKey != "123" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized missing header key"})
+		return
 	}
-}
-
-/*
-// This middleware ensures that a request will be aborted with an error
-// if the user is already logged in
-func ensureNotLoggedIn() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// If there's no error or if the token is not empty
-		// the user is already logged in
-		loggedInInterface, _ := c.Get("is_logged_in")
-		loggedIn := loggedInInterface.(bool)
-		if loggedIn {
-			// if token, err := c.Cookie("token"); err == nil || token != "" {
-			c.AbortWithStatus(http.StatusUnauthorized)
-		}
+	if apiKey != "123" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized missing POST key"})
+		return
 	}
+	/*
+	   session := sessions.Default(c)
+	   	user := session.Get(userkey)
+	   	if user == nil {
+	   		// Abort the request with the appropriate error code
+	   		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	   		return
+	   	}
+	*/
+	// Continue down the chain to handler etc
+	c.Next()
 }
-// This middleware sets whether the user is logged in or not
-func setUserStatus() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if token, err := c.Cookie("token"); err == nil || token != "" {
-			c.Set("is_logged_in", true)
-		} else {
-			c.Set("is_logged_in", false)
-		}
-	}
-}
-*/

@@ -8,10 +8,16 @@ Another one to look at. <https://blog.logrocket.com/how-to-build-a-rest-api-with
 
 ## Curl Commands
 
-Get the API version
+Get the API version:
 
 ```
 curl -H "Accept: application/json" http://localhost:8080/api/ver
+```
+
+Now needs keys:
+
+```
+curl -X POST --data "apiKey=123" -H "apiKey: 123" http://localhost:8080/api/ver -H "Accept: application/json"
 ```
 
 ## Testing

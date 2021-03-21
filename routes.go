@@ -12,6 +12,8 @@ func initializeRoutes() {
 	router.POST("/robin", submittedURL)
 	router.GET("/article/view/:article_id", getArticle)
 
+	router.Static("/resources", "./resources")
+
 	apiRoutes := router.Group("/api")
 	apiRoutes.Use(APIAuthRequired)
 	{

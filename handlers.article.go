@@ -6,13 +6,22 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"validator"
 )
 
 func submittedURL(c *gin.Context) {
 	var url URL
-	c.BindJSON(&url)
-	c.JSON(http.StatusOK, gin.H{"url": url.URL})
-	return
+
+	if err := c.BindJSON(&url); err != nil {
+		ve, ok := err.(validator.ValidationErrors)
+		if !ok {
+			// non validation error... handle appropriately.
+		}
+		c.JSON(http.Status500, gin.H{"error": err})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"url": url.URL})
+		return
+	}
 
 	/*
 		render(

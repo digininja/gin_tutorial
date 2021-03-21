@@ -28,6 +28,7 @@ func render(c *gin.Context, status int, templateName string, data gin.H) {
 		// Respond with HTML
 		c.HTML(status, templateName, data)
 	}
+	return
 
 }
 

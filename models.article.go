@@ -7,6 +7,10 @@ import (
 	// 	"github.com/jinzhu/gorm"
 )
 
+type URL struct {
+	URL string `json:url`
+}
+
 type pageError struct {
 	Code    int    `json:code`
 	Message string `json:message`

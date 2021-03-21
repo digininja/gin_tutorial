@@ -9,6 +9,7 @@ func initializeRoutes() {
 	// Handle the index route
 	router.GET("/", showIndexPage)
 	router.GET("/robin", showRobinPage)
+	router.POST("/robin", submittedURL)
 	router.GET("/article/view/:article_id", getArticle)
 
 	apiRoutes := router.Group("/api")

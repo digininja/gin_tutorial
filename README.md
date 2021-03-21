@@ -20,6 +20,12 @@ Now needs keys:
 curl -X POST --data "apiKey=123" -H "apiKey: 123" http://localhost:8080/api/ver -H "Accept: application/json"
 ```
 
+## Submit and handle JSON
+
+```
+curl -X POST http://localhost:8080/robin -H "Accept: application/json" -H "Content-Type: application/json" --data '{"url":"test.com"}'
+```
+
 ## Testing
 
 To test everything:

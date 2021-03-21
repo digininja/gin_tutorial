@@ -8,6 +8,28 @@ import (
 	"strconv"
 )
 
+func submittedURL(c *gin.Context) {
+	var url URL
+	c.BindJSON(&url)
+	c.JSON(http.StatusOK, gin.H{"url": url.URL})
+	return
+
+	/*
+		render(
+			c,
+			// Set the HTTP status to 200 (OK)
+			http.StatusOK,
+			// Use the index.html template
+			"robin.html",
+			// Pass the data that the page uses (in this case, 'title')
+			gin.H{
+				"title": "Robin's Page",
+				"hello": "World",
+			},
+		)
+	*/
+}
+
 func showRobinPage(c *gin.Context) {
 
 	render(

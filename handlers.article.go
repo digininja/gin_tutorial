@@ -6,10 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"gopkg.in/go-playground/validator.v9"
 	"net/http"
 	"strconv"
 )
+
+import "github.com/go-playground/validator/v10"
 
 type ValidationError struct {
 	Field  string `json:"field"`

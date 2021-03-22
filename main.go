@@ -4,6 +4,11 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"reflect"
+	"strings"
+
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 )
 
 var router *gin.Engine
@@ -38,6 +43,17 @@ func main() {
 	// Set the router as the default one provided by Gin
 	router = gin.Default()
 
+	// https://blog.depa.do/post/gin-validation-errors-handling
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterTagNameFunc(func(fld reflect.StructField) string {
+			name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+			if name == "-" {
+				return ""
+			}
+			return name
+		})
+	}
+
 	// Process the templates at the start so that they don't have to be loaded
 	// from the disk again. This makes serving HTML pages very fast.
 	router.LoadHTMLGlob("templates/*html")
@@ -46,6 +62,6 @@ func main() {
 	initializeRoutes()
 
 	// Start serving the application
-	router.Run()
+	router.Run(":3000")
 
 }

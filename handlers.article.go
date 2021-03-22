@@ -3,40 +3,87 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"gopkg.in/go-playground/validator.v9"
 	"net/http"
 	"strconv"
-	"validator"
 )
 
-func submittedURL(c *gin.Context) {
-	var url URL
+type ValidationError struct {
+	Field  string `json:"field"`
+	Reason string `json:"reason"`
+}
 
-	if err := c.BindJSON(&url); err != nil {
-		ve, ok := err.(validator.ValidationErrors)
-		if !ok {
-			// non validation error... handle appropriately.
+func Descriptive(verr validator.ValidationErrors) []ValidationError {
+	errs := []ValidationError{}
+
+	for _, f := range verr {
+		err := f.ActualTag()
+		if f.Param() != "" {
+			err = fmt.Sprintf("%s=%s", err, f.Param())
 		}
-		c.JSON(http.Status500, gin.H{"error": err})
-	} else {
-		c.JSON(http.StatusOK, gin.H{"url": url.URL})
+		errs = append(errs, ValidationError{Field: f.Field(), Reason: err})
+	}
+
+	return errs
+}
+
+func validateJSON(c *gin.Context) {
+	var query struct {
+		Name  string `form:"name" json:"name" binding:"required"`
+		Color string `form:"color" json:"color" binding:"required,oneof=blue yellow"`
+	}
+
+	// Testing with
+	// curl -s http://localhost:3000/validate -H "Accept: application/json" -H "Content-Type: application/json" --data '{"Name":"test.coma","coxlor": "blue"}'
+
+	if err := c.ShouldBind(&query); err != nil {
+
+		xType := fmt.Sprintf("%T", err)
+		fmt.Println(xType)
+		// prints validator.ValidationErrors
+
+		var verr validator.ValidationErrors
+
+		// This always returns false
+		if errors.As(err, &verr) {
+			c.JSON(http.StatusBadRequest, gin.H{"errors": Descriptive(verr)})
+			fmt.Println("in here")
+			return
+		}
+
+		// error message is
+		// "Key: 'color' Error:Field validation for 'color' failed on the 'required' tag"
+		// so know validator is called and failing
+
+		fmt.Println("other")
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
-	/*
-		render(
-			c,
-			// Set the HTTP status to 200 (OK)
-			http.StatusOK,
-			// Use the index.html template
-			"robin.html",
-			// Pass the data that the page uses (in this case, 'title')
-			gin.H{
-				"title": "Robin's Page",
-				"hello": "World",
-			},
-		)
-	*/
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+func submittedURL(c *gin.Context) {
+	// Validation
+	// https://seb-nyberg.medium.com/better-validation-errors-in-go-gin-88f983564a3d
+
+	// https://blog.depa.do/post/gin-validation-errors-handling
+
+	var url URL
+
+	if err := c.ShouldBind(&url); err != nil {
+
+		if verr, ok := err.(validator.ValidationErrors); ok {
+			fmt.Printf("this is actually a validation error, %s\n", verr)
+		}
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
 func showRobinPage(c *gin.Context) {

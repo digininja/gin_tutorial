@@ -8,7 +8,7 @@ import (
 )
 
 type URL struct {
-	URL string `json:url`
+	URL string `json:url binding:required`
 }
 
 type pageError struct {

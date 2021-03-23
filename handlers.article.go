@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 import "github.com/go-playground/validator/v10"
@@ -34,11 +36,11 @@ func Descriptive(verr validator.ValidationErrors) []ValidationError {
 func validateJSON(c *gin.Context) {
 	var query struct {
 		Name  string `form:"name" json:"name" binding:"required"`
-		Color string `form:"color" json:"color" binding:"required,oneof=blue yellow"`
+		Color string `form:"colour" json:"colour" binding:"required,oneof=blue yellow"`
 	}
 
 	// Testing with
-	// curl -s http://localhost:3000/validate -H "Accept: application/json" -H "Content-Type: application/json" --data '{"Name":"test.coma","coxlor": "blue"}'
+	// curl -s http://localhost:3000/validate -H "Accept: application/json" -H "Content-Type: application/json" --data '{"Name":"test.coma","colour": "blue"}'
 
 	if err := c.ShouldBind(&query); err != nil {
 		var verr validator.ValidationErrors
@@ -53,7 +55,23 @@ func validateJSON(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	//data := c.BindJSON(&query)
+	c.JSON(http.StatusOK, gin.H{"status": query.Name})
+}
+
+// IsDebugging returns true if the framework is running in debug mode.
+// Use SetMode(gin.ReleaseMode) to disable debug mode.
+func IsDebugging() bool {
+	return gin.Mode() == gin.DebugMode
+}
+
+func debugPrint(format string, values ...interface{}) {
+	if IsDebugging() {
+		if !strings.HasSuffix(format, "\n") {
+			format += "\n"
+		}
+		fmt.Fprintf(gin.DefaultWriter, "[GIN-debug] "+format, values...)
+	}
 }
 
 func submittedURL(c *gin.Context) {
@@ -62,18 +80,29 @@ func submittedURL(c *gin.Context) {
 
 	// https://blog.depa.do/post/gin-validation-errors-handling
 
-	var url URL
+	var submittedURL struct {
+		URL string `form:"url" json:"url" binding:"required"`
+	}
 
-	if err := c.ShouldBind(&url); err != nil {
+	// Testing with
+	// curl -s http://localhost:3000/validate -H "Accept: application/json" -H "Content-Type: application/json" --data '{"Name":"test.coma","colour": "blue"}'
 
-		if verr, ok := err.(validator.ValidationErrors); ok {
-			fmt.Printf("this is actually a validation error, %s\n", verr)
+	if err := c.ShouldBind(&submittedURL); err != nil {
+		debugPrint("Error: %s", err.Error())
+		var verr validator.ValidationErrors
+
+		if errors.As(err, &verr) {
+			c.JSON(http.StatusBadRequest, gin.H{"errors": Descriptive(verr)})
+			return
 		}
-		c.JSON(http.StatusBadRequest, err.Error())
+
+		// need to convert this to a better error
+		c.JSON(http.StatusBadRequest, gin.H{"errors": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	uuid := uuid.New()
+	c.JSON(http.StatusOK, gin.H{"ID": uuid})
 }
 
 func showRobinPage(c *gin.Context) {

@@ -41,26 +41,15 @@ func validateJSON(c *gin.Context) {
 	// curl -s http://localhost:3000/validate -H "Accept: application/json" -H "Content-Type: application/json" --data '{"Name":"test.coma","coxlor": "blue"}'
 
 	if err := c.ShouldBind(&query); err != nil {
-
-		xType := fmt.Sprintf("%T", err)
-		fmt.Println(xType)
-		// prints validator.ValidationErrors
-
 		var verr validator.ValidationErrors
 
-		// This always returns false
 		if errors.As(err, &verr) {
 			c.JSON(http.StatusBadRequest, gin.H{"errors": Descriptive(verr)})
-			fmt.Println("in here")
 			return
 		}
 
-		// error message is
-		// "Key: 'color' Error:Field validation for 'color' failed on the 'required' tag"
-		// so know validator is called and failing
-
-		fmt.Println("other")
-		c.JSON(http.StatusBadRequest, err.Error())
+		// need to convert this to a better error
+		c.JSON(http.StatusBadRequest, gin.H{"errors": err.Error()})
 		return
 	}
 

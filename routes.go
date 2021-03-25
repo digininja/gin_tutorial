@@ -11,6 +11,7 @@ func initializeRoutes() {
 	router.POST("/validate", validateJSON)
 	router.GET("/robin", showRobinPage)
 	router.POST("/robin", submittedURL)
+	router.POST("/callback", callback)
 	router.GET("/article/view/:article_id", getArticle)
 
 	router.Static("/resources", "./resources")

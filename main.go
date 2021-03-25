@@ -8,6 +8,8 @@ import (
 
 var router *gin.Engine
 
+var ourSubmissions submissions
+
 // Render one of HTML, JSON or CSV based on the 'Accept' header of the request
 // If the header doesn't specify this, HTML is rendered, provided that
 // the template name is present
@@ -37,6 +39,8 @@ func main() {
 
 	// Set the router as the default one provided by Gin
 	router = gin.Default()
+
+	ourSubmissions = submissions{}
 
 	// Process the templates at the start so that they don't have to be loaded
 	// from the disk again. This makes serving HTML pages very fast.

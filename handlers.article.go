@@ -74,6 +74,50 @@ func debugPrint(format string, values ...interface{}) {
 	}
 }
 
+type submission struct {
+	URL   string
+	UUID  string
+	count int
+}
+
+type submissions struct {
+	data []submission
+}
+
+func callback(c *gin.Context) {
+	var callbackUUID struct {
+		UUID string `form:"uuid" json:"uuid" binding:"required"`
+	}
+
+	// Testing with
+	// curl -s http://localhost:3000/callback -H "Accept: application/json" -H "Content-Type: application/json" --data '{"UUID": "4ea5303b-90be-42e7-bb77-ed6590e87370"}'
+
+	if err := c.ShouldBind(&callbackUUID); err != nil {
+		debugPrint("Error: %s", err.Error())
+		var verr validator.ValidationErrors
+
+		if errors.As(err, &verr) {
+			c.JSON(http.StatusBadRequest, gin.H{"errors": Descriptive(verr)})
+			return
+		}
+
+		// need to convert this to a better error
+		c.JSON(http.StatusBadRequest, gin.H{"errors": err.Error()})
+		return
+	}
+
+	for _, data := range ourSubmissions.data {
+		if data.UUID == callbackUUID.UUID {
+			debugPrint("hit")
+			c.JSON(http.StatusOK, gin.H{"hit": data.URL})
+			return
+		}
+	}
+	debugPrint("miss")
+	c.JSON(http.StatusOK, gin.H{"Miss": ""})
+
+}
+
 func submittedURL(c *gin.Context) {
 	// Validation
 	// https://seb-nyberg.medium.com/better-validation-errors-in-go-gin-88f983564a3d
@@ -100,9 +144,16 @@ func submittedURL(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"errors": err.Error()})
 		return
 	}
+	myUUID := uuid.NewString()
 
-	uuid := uuid.New()
-	c.JSON(http.StatusOK, gin.H{"ID": uuid})
+	submission := submission{}
+	submission.URL = submittedURL.URL
+	submission.count = 0
+	submission.UUID = myUUID
+
+	ourSubmissions.data = append(ourSubmissions.data, submission)
+
+	c.JSON(http.StatusOK, gin.H{"ID": myUUID})
 }
 
 func showRobinPage(c *gin.Context) {

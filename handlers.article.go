@@ -106,10 +106,16 @@ func callback(c *gin.Context) {
 		return
 	}
 
-	for _, data := range ourSubmissions.data {
+	for k, data := range ourSubmissions.data {
 		if data.UUID == callbackUUID.UUID {
 			debugPrint("hit")
-			c.JSON(http.StatusOK, gin.H{"hit": data.URL})
+			debugPrint("count: %d", data.count)
+			ourSubmissions.data[k].count++
+			if data.count > 5 {
+				c.JSON(http.StatusOK, gin.H{"status": "ready"})
+			} else {
+				c.JSON(http.StatusOK, gin.H{"status": "not ready yet"})
+			}
 			return
 		}
 	}

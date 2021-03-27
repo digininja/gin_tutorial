@@ -97,14 +97,16 @@ func callback(c *gin.Context) {
 		var verr validator.ValidationErrors
 
 		if errors.As(err, &verr) {
-			c.JSON(http.StatusBadRequest, gin.H{"errors": Descriptive(verr)})
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": Descriptive(verr)})
 			return
 		}
 
 		// need to convert this to a better error
-		c.JSON(http.StatusBadRequest, gin.H{"errors": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
+	debugPrint("called back and not an error")
+	debugPrint(callbackUUID.UUID)
 
 	for k, data := range ourSubmissions.data {
 		if data.UUID == callbackUUID.UUID {
@@ -112,15 +114,15 @@ func callback(c *gin.Context) {
 			debugPrint("count: %d", data.count)
 			ourSubmissions.data[k].count++
 			if data.count > 5 {
-				c.JSON(http.StatusOK, gin.H{"status": "ready"})
+				c.JSON(http.StatusOK, gin.H{"status": "ready", "message": "hello world"})
 			} else {
-				c.JSON(http.StatusOK, gin.H{"status": "not ready yet"})
+				c.JSON(http.StatusOK, gin.H{"status": "not ready yet", "message": ""})
 			}
 			return
 		}
 	}
 	debugPrint("miss")
-	c.JSON(http.StatusOK, gin.H{"Miss": ""})
+	c.JSON(http.StatusOK, gin.H{"status": "error", "message": "unknown"})
 
 }
 

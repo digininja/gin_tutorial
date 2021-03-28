@@ -19,18 +19,22 @@ type ValidationError struct {
 	Reason string `json:"reason"`
 }
 
-func Descriptive(verr validator.ValidationErrors) []ValidationError {
+func Descriptive(verr validator.ValidationErrors) (string, []ValidationError) {
 	errs := []ValidationError{}
+	errorString := ""
 
 	for _, f := range verr {
 		err := f.ActualTag()
 		if f.Param() != "" {
 			err = fmt.Sprintf("%s=%s", err, f.Param())
 		}
+		errorString += "\n" + errorString + "Field: " + f.Field() + " - " + err
 		errs = append(errs, ValidationError{Field: f.Field(), Reason: err})
 	}
 
-	return errs
+	errorString = "JSON validation errors:" + errorString
+	debugPrint(errorString)
+	return errorString, errs
 }
 
 func validateJSON(c *gin.Context) {
@@ -46,12 +50,13 @@ func validateJSON(c *gin.Context) {
 		var verr validator.ValidationErrors
 
 		if errors.As(err, &verr) {
-			c.JSON(http.StatusBadRequest, gin.H{"errors": Descriptive(verr)})
+			_, errDesc := Descriptive(verr)
+			c.JSON(http.StatusBadRequest, gin.H{"error": errDesc})
 			return
 		}
 
 		// need to convert this to a better error
-		c.JSON(http.StatusBadRequest, gin.H{"errors": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -89,15 +94,17 @@ func callback(c *gin.Context) {
 		UUID string `form:"uuid" json:"uuid" binding:"required"`
 	}
 
-	// Testing with
-	// curl -s http://localhost:3000/callback -H "Accept: application/json" -H "Content-Type: application/json" --data '{"UUID": "4ea5303b-90be-42e7-bb77-ed6590e87370"}'
+	// Testing with:
+	// UUID="3f1b7648-6dc3-4a2f-9832-c4c88ee0e4ad"
+	// curl -s http://localhost:3000/callback -H "Accept: application/json" -H "Content-Type: application/json" --data "{\"UUID\": \"$UUID\"}" | jq .
 
 	if err := c.ShouldBind(&callbackUUID); err != nil {
 		debugPrint("Error: %s", err.Error())
 		var verr validator.ValidationErrors
 
 		if errors.As(err, &verr) {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": Descriptive(verr)})
+			errString, errDesc := Descriptive(verr)
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": errString, "additional": errDesc})
 			return
 		}
 
@@ -114,19 +121,19 @@ func callback(c *gin.Context) {
 			debugPrint("count: %d", data.count)
 			ourSubmissions.data[k].count++
 			if data.count > 5 {
-				c.JSON(http.StatusOK, gin.H{"status": "ready", "message": "hello world"})
+				c.JSON(http.StatusOK, gin.H{"status": "complete", "message": "hello world"})
 			} else {
-				c.JSON(http.StatusOK, gin.H{"status": "not ready yet", "message": ""})
+				c.JSON(http.StatusOK, gin.H{"status": "processing", "message": ""})
 			}
 			return
 		}
 	}
 	debugPrint("miss")
-	c.JSON(http.StatusOK, gin.H{"status": "error", "message": "unknown"})
+	c.JSON(http.StatusOK, gin.H{"status": "error", "message": "Unknown UUID submitted"})
 
 }
 
-func submittedURL(c *gin.Context) {
+func submitURL(c *gin.Context) {
 	// Validation
 	// https://seb-nyberg.medium.com/better-validation-errors-in-go-gin-88f983564a3d
 
@@ -136,20 +143,22 @@ func submittedURL(c *gin.Context) {
 		URL string `form:"url" json:"url" binding:"required"`
 	}
 
-	// Testing with
-	// curl -s http://localhost:3000/validate -H "Accept: application/json" -H "Content-Type: application/json" --data '{"Name":"test.coma","colour": "blue"}'
+	// Test with:
+	// URL="https://digi.ninja"
+	// curl -s http://localhost:3000/submitURL -H "Accept: application/json" -H "Content-Type: application/json" --data "{\"URL\": \"$URL\"}" | jq .
 
 	if err := c.ShouldBind(&submittedURL); err != nil {
 		debugPrint("Error: %s", err.Error())
 		var verr validator.ValidationErrors
 
 		if errors.As(err, &verr) {
-			c.JSON(http.StatusBadRequest, gin.H{"errors": Descriptive(verr)})
+			errString, errDesc := Descriptive(verr)
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": errString, "additional": errDesc})
 			return
 		}
 
 		// need to convert this to a better error
-		c.JSON(http.StatusBadRequest, gin.H{"errors": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
 		return
 	}
 	myUUID := uuid.NewString()
@@ -164,14 +173,13 @@ func submittedURL(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"ID": myUUID})
 }
 
-func showRobinPage(c *gin.Context) {
-
+func showSubmitURL(c *gin.Context) {
 	render(
 		c,
 		// Set the HTTP status to 200 (OK)
 		http.StatusOK,
 		// Use the index.html template
-		"robin.html",
+		"submit.html",
 		// Pass the data that the page uses (in this case, 'title')
 		gin.H{
 			"title": "Robin's Page",

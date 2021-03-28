@@ -8,10 +8,10 @@ func initializeRoutes() {
 
 	// Handle the index route
 	router.GET("/", showIndexPage)
-	router.POST("/validate", validateJSON)
-	router.GET("/robin", showRobinPage)
-	router.POST("/robin", submittedURL)
-	router.POST("/callback", callback)
+	router.POST("/validate", validateJSON) // not used
+	router.GET("/submitURL", showSubmitURL)
+	router.POST("/submitURL", submitURL) // Send in the URL
+	router.POST("/callback", callback)   // Check on state of UUID
 	router.GET("/article/view/:article_id", getArticle)
 
 	router.Static("/resources", "./resources")

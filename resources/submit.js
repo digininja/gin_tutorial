@@ -1,8 +1,18 @@
-var timeout; // this is a variable the timout will be assigned to
-var init = 1;
-var timestamp = null;
+// https://gilfink.medium.com/quick-tip-long-polling-using-jquery-fd26799921d
+
+var timeout;
+const MAX_CALLBACKS = 10;
+var callbackCount = 0;
 
 function doCallback(uuid) {
+	callbackCount++;
+	console.log ("Callback count: " + callbackCount);
+
+	if (callbackCount > MAX_CALLBACKS) {
+		alert ("Hit max callbacks, aborting");
+		return;
+	}
+
     var urlData = {
         "UUID": uuid
     };
@@ -20,40 +30,23 @@ function doCallback(uuid) {
 			if (data.status == "error") {
 				alert (data.message);
 			} else {
-				if (data.status == "not ready yet") {
-					timeout = setTimeout(function() {doCallback(uuid);}, 1000); // here we assign the timout
+				if (data.status == "processing") {
+					timeout = setTimeout(function() {doCallback(uuid);}, 1000);
 				} else {
-					if (data.status == "ready") {
+					if (data.status == "complete") {
 						alert("success: " + data.message);
 					} else {
 						alert ("Something odd happened");
 					}
-					clearTimeout(timeout); // here we clear the timeout
+					clearTimeout(timeout);
 				}
 			}
-            /*
-            		var json = eval('('+data+ ')');
-            		var str = json['out'].replace(/\n/g, "<br>");
-            		tag.html(str).dialog({
-            			title: 'Ping',
-            			modal: false,
-            			width: 480,
-            			height: 550,
-            			close: function() {
-            				alert('close');
-            				clearTimeout(timeout); // here we clear the timeout
-            			}
-            		}).dialog('open');
-            		timestamp = json["tsp"];
-            		init = 0;
-            */
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             var obj = JSON.parse(XMLHttpRequest.responseText);
             alert(obj.errors[0].field);
 
-            clearTimeout(timeout); // here we clear the timeout
-            //		 setTimeout("waitForMsg()", 15000);
+            clearTimeout(timeout);
         }
     });
 }
@@ -63,17 +56,17 @@ function submitURL() {
     };
 
     console.log("Submitting: " + JSON.stringify(urlData))
+	callbackCount = 0;
 
     $.ajax({
         type: "POST",
-        url: "/robin",
+        url: "/submitURL",
         data: JSON.stringify(urlData),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         cache: false,
         success: function(data) {
-            clearTimeout(timeout); // here we clear the timeout
-            alert("success: " + data.ID);
+            console.log("URL submitted, UUID: " + data.ID);
 			doCallback(data.ID);
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
